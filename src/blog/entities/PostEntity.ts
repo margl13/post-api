@@ -1,4 +1,5 @@
-import {Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, PrimaryGeneratedColumn, ManyToOne} from 'typeorm';
+import {UserEntity} from "../../user/entities/UserEntity";
 
 @Entity()
 export class PostEntity {
@@ -12,6 +13,9 @@ export class PostEntity {
     imageUrl: string;
     @Column('text')
     content: string;
+
+    @ManyToOne(type => UserEntity, user => user.posts)
+    author: UserEntity
 }
 
 

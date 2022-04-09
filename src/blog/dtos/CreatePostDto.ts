@@ -1,6 +1,19 @@
+import {IsNotEmpty} from "class-validator";
+import {UserDto} from "../../user/dtos/UserDto";
+
 export class CreatePostDto {
-    public title: string;
-    public subTitle: string;
-    public imageUrl: string;
-    public content: string;
+
+    @IsNotEmpty()
+    title: string;
+
+    @IsNotEmpty()
+    subTitle: string;
+
+    @IsNotEmpty()
+    imageUrl: string;
+
+    @IsNotEmpty()
+    content: string;
+
+    author: UserDto
 }
