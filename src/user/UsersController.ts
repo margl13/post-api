@@ -1,69 +1,72 @@
-import {Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards} from "@nestjs/common";
-import {UsersService} from "./services/UsersService";
-import { Observable, of} from "rxjs";
-import {UserEntity} from "./entities/UserEntity";
-import {UserDto, UserRole} from "./dtos/UserDto";
-import {catchError,map} from "rxjs/operators";
-import {hasRoles} from "../auth/decorators/roles.decorator";
-import {JwtAuthGuard} from "../auth/guards/jwt-guard";
-import {RolesGuard} from "../auth/guards/roles.guard";
-import {Pagination} from "nestjs-typeorm-paginate";
-import {UserIsUser} from "../auth/guards/userIsUser";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { Pagination } from 'nestjs-typeorm-paginate';
 
-
+import { UserEntity } from './entities/UserEntity';
+import { UsersService } from './services/UsersService';
+import { UserDto, UserRole } from './dtos/UserDto';
+import { hasRoles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-guard';
+import { UserIsUser } from '../auth/guards/userIsUser';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('users')
 export class UsersController {
-    constructor(private usersService: UsersService) {}
+  constructor(private usersService: UsersService) {}
 
+  @Get()
+  index(
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+  ): Observable<Pagination<UserEntity>> {
+    limit = limit > 100 ? 100 : limit;
+    return this.usersService.paginate({
+      page,
+      limit,
+      route: 'http://localhost:3000/api/users',
+    });
+  }
 
-    @Get()
-    index(
-        @Query('page') page: number =1,
-        @Query('limit') limit: number = 10): Observable<Pagination<UserEntity>> {
-        limit = limit > 100 ? 100 : limit;
-        return this.usersService.paginate({page, limit, route: 'http://localhost:3000/api/users'});
-    }
+  @Post()
+  create(@Body() user: UserDto) {
+    return this.usersService.create(user);
+  }
 
-    @Post()
-    create(@Body() user: UserDto): Observable<UserDto | Object> {
-        return this.usersService.create(user).pipe(
-            map((user: UserDto) => user),
-            catchError(err => of({error: err.massage}))
-        );
-    }
+  @Get(':id')
+  findBYId(@Param() params): Promise<UserDto> {
+    return this.usersService.findById(params.id);
+  }
 
-    @Post('login')
-    login(@Body() user: UserDto): Observable<any> {
-        return this.usersService.login(user).pipe(
-            map((jwt: string) => {
-                return { access_token: jwt };
-            })
-        )
-    }
+  @UseGuards(JwtAuthGuard, UserIsUser)
+  @Put(':id')
+  update(@Param('id') id: number, @Body() user: UserDto): Promise<UserDto> {
+    return this.usersService.update(id, user);
+  }
 
-    @Get(':id')
-    findBYId(@Param()params): Observable<UserDto> {
-        return this.usersService.findById(params.id);
-    }
+  @hasRoles(UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Put(':id/role')
+  updateRoleOfUser(
+    @Param('id') id: number,
+    @Body() user: UserDto,
+  ): Promise<UserDto> {
+    return this.usersService.updateRoleOfUser(id, user);
+  }
 
-    @UseGuards(JwtAuthGuard, UserIsUser)
-    @Put(':id')
-    update(@Param('id')id: string, @Body() user: UserDto): Observable<any> {
-        return this.usersService.update(Number(id),user);
-    }
-
-    @hasRoles(UserRole.ADMIN)
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Put(':id/role')
-    updateRoleOfUser(@Param('id') id: string, @Body() user: UserDto): Observable<UserDto> {
-        return this.usersService.updateRoleOfUser(Number(id), user);
-    }
-
-    @hasRoles(UserRole.ADMIN)
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Delete(':id')
-    delete(@Param('id') id: string): Observable<any> {
-        return this.usersService.delete(Number(id));
-    }
+  @hasRoles(UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Delete(':id')
+  delete(@Param('id') id: number) {
+    return this.usersService.delete(id);
+  }
 }

@@ -1,17 +1,16 @@
-import {PostEntity} from "../../blog/entities/PostEntity";
+import { PostDto } from '../../blog/dtos/PostDto';
 
 export class UserDto {
-    id?: number;
-    username?: string;
-    email?: string;
-    password?: string;
-    role?: UserRole;
-    posts?: PostEntity[];
+  id?: number;
+  username?: string;
+  email?: string;
+  password?: string;
+  role?: UserRole;
+  posts?: PostDto[];
 }
 
 export enum UserRole {
-    ADMIN = 'admin',
-    CHIEFEDITOR = 'chiefeditor',
-    EDITOR = 'editor',
-    USER = 'user'
+  ADMIN = 'admin',
+  EDITOR = 'editor',
+  USER = 'user',
 }

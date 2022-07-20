@@ -1,28 +1,52 @@
-import { Injectable } from "@nestjs/common";
-import {UserDto} from "../../user/dtos/UserDto";
-import {JwtService} from "@nestjs/jwt";
-import {from, Observable} from "rxjs";
-const bcrypt = require('bcrypt');
+import { forwardRef, Inject } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
-@Injectable()
+import { UsersService } from '../../user/services/UsersService';
+import { UserDto } from '../../user/dtos/UserDto';
+import { AuthLoginDto } from '../dto/AuthLoginDto';
+import { UserEntity } from '../../user/entities/UserEntity';
+
 export class AuthService {
-    constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    @Inject(forwardRef(() => UsersService))
+    private usersService: UsersService,
+    private readonly jwtService: JwtService,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+  ) {}
 
-    generateToken(user: UserDto): Observable<string> {
-        return from(this.jwtService.signAsync({user}))
+  comparePasswords(newPassword: string, hashPassword: string): Promise<any> {
+    return bcrypt.compare(newPassword, hashPassword);
+  }
+
+  public async validateUser(auth: AuthLoginDto): Promise<UserDto> {
+    const { email, password } = auth;
+    const user = await this.userRepository.findOne(
+      { email },
+      { select: ['id', 'password', 'username', 'email', 'role'] },
+    );
+    const match = this.comparePasswords(password, user.password);
+    if (match) {
+      const { password, ...result } = user;
+      return result;
+    } else {
+      throw Error;
     }
+  }
 
-    hashPassword(password: string): Observable<string> {
-        return from<string>(bcrypt.hash(password, 12))
+  generateJWT(user: UserDto): Promise<string> {
+    return this.jwtService.signAsync({ user });
+  }
+
+  async login(auth: AuthLoginDto): Promise<string> {
+    const user = await this.validateUser(auth);
+    if (user) {
+      return this.generateJWT(user).then((jwt: string) => jwt);
+    } else {
+      return 'Wrong Credentials';
     }
-
-    comparePasswords(newPassword: string, hashedPassword: string): Observable<any | boolean> {
-        return from<any | boolean>(bcrypt.compare(newPassword, hashedPassword));
-    }
-
-
-
-
-
-
+  }
 }

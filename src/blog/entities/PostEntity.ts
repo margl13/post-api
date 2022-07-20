@@ -1,21 +1,33 @@
-import {Column, Entity, PrimaryGeneratedColumn, ManyToOne} from 'typeorm';
-import {UserEntity} from "../../user/entities/UserEntity";
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { UserEntity } from '../../user/entities/UserEntity';
 
 @Entity()
 export class PostEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
-    @Column({length: 500})
-    title: string;
-    @Column({length: 500})
-    subTitle: string;
-    @Column('text')
-    imageUrl: string;
-    @Column('text')
-    content: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @ManyToOne(type => UserEntity, user => user.posts)
-    author: UserEntity
+  @Column({ length: 500 })
+  title: string;
+
+  @Column({ length: 500 })
+  subTitle: string;
+
+  @Column('text')
+  imageUrl: string;
+
+  @Column('text')
+  content: string;
+
+  @ManyToOne((type) => UserEntity, (user) => user.posts, {
+    eager: true,
+    cascade: false,
+    nullable: true,
+  })
+  author: UserEntity;
 }
-
-

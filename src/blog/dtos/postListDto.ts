@@ -1,5 +1,5 @@
-import {PostDto} from "./PostDto";
+import { PostDto } from './PostDto';
 
 export class PostListDto {
-    posts: PostDto[];
+  posts: PostDto[];
 }
