@@ -6,6 +6,7 @@ export class UserDto {
   email?: string;
   password?: string;
   role?: UserRole;
+  profileImage?: string;
   posts?: PostDto[];
 }
 

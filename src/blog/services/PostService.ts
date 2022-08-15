@@ -36,7 +36,7 @@ export class PostService {
         },
         relations: ['author'],
       }),
-    ).pipe(map((blogEntries: PostDto[]) => blogEntries));
+    ).pipe(map((posts: PostDto[]) => posts));
   }
 
   public async create(

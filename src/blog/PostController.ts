@@ -77,7 +77,7 @@ export class PostController {
     return this.postService.edit(Number(id), editPostDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @Delete(':id')
   delete(@Param('id') postId: number) {
     return this.postService.delete(postId);
@@ -91,7 +91,7 @@ export class PostController {
   }
 
   @Get('image/:imagename')
-  findImage(@Param('imagename') imagename, @Res() res): Promise<Object> {
+  findImage(@Param('imagename') imagename, @Res() res): Promise<Image> {
     return res.sendFile(join(process.cwd(), 'uploads/imageUrls/' + imagename));
   }
 }

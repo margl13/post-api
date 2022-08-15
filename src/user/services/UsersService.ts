@@ -1,8 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { from, Observable } from 'rxjs';
+import { from, mergeMap, Observable, switchMap } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import {
   IPaginationOptions,
   paginate,
@@ -22,13 +22,56 @@ export class UsersService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  paginate(options: IPaginationOptions): Observable<Pagination<UserEntity>> {
-    return from(paginate<UserEntity>(this.userRepository, options)).pipe(
-      map((usersPageable: Pagination<UserEntity>) => {
+  paginate(options: IPaginationOptions): Observable<Pagination<UserDto>> {
+    return from(paginate<UserDto>(this.userRepository, options)).pipe(
+      map((usersPageable: Pagination<UserDto>) => {
         usersPageable.items.forEach(function (v) {
           delete v.password;
         });
 
+        return usersPageable;
+      }),
+    );
+  }
+
+  paginateByUsername(
+    options: IPaginationOptions,
+    user: UserDto,
+  ): Observable<Pagination<UserDto>> {
+    return from(
+      this.userRepository.findAndCount({
+        skip: Number(options.page) * Number(options.limit) || 0,
+        take: Number(options.limit) || 10,
+        order: { id: 'ASC' },
+        select: ['id', 'username', 'email', 'role'],
+        where: [{ username: Like(`%${user.username}%`) }],
+      }),
+    ).pipe(
+      map(([users, totalUsers]) => {
+        console.log(users);
+        console.log(options.page);
+        const usersPageable: Pagination<UserEntity> = {
+          items: users,
+          links: {
+            first: options.route + `?limit=${options.limit}`,
+            previous: options.route + ``,
+            next:
+              options.route +
+              `?limit=${options.limit}&page=${Number(options.page) + 1}`,
+            last:
+              options.route +
+              `?limit=${options.limit}&page=${Math.ceil(
+                totalUsers / Number(options.limit),
+              )}`,
+          },
+          meta: {
+            currentPage: Number(options.page),
+            itemCount: users.length,
+            itemsPerPage: Number(options.limit),
+            totalItems: totalUsers,
+            totalPages: Math.ceil(totalUsers / Number(options.limit)),
+          },
+        };
         return usersPageable;
       }),
     );
@@ -44,10 +87,14 @@ export class UsersService {
     newUser.email = user.email;
     newUser.password = user.password;
     newUser.role = UserRole.USER;
+    newUser.profileImage = user.profileImage;
     return this.userRepository.save(newUser);
   }
 
   async update(id: number, user: UserDto): Promise<any> {
+    delete user.email;
+    delete user.password;
+    delete user.role;
     return await this.userRepository.update(id, user);
   }
 

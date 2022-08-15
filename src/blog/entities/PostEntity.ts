@@ -29,5 +29,6 @@ export class PostEntity {
     cascade: false,
     nullable: true,
   })
+  @JoinColumn()
   author: UserEntity;
 }

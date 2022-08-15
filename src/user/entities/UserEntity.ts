@@ -29,6 +29,9 @@ export class UserEntity {
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role?: UserRole;
 
+  @Column({ nullable: true })
+  profileImage: string;
+
   @OneToMany((type) => PostEntity, (post) => post.author)
   posts: PostEntity[];
 

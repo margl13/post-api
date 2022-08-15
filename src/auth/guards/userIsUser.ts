@@ -8,6 +8,8 @@ import {
 
 import { UsersService } from '../../user/services/UsersService';
 import { UserDto } from '../../user/dtos/UserDto';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class UserIsUser implements CanActivate {
