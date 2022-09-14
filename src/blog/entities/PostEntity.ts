@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from '../../user/entities/UserEntity';
 
-@Entity()
+@Entity('post')
 export class PostEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -18,17 +18,16 @@ export class PostEntity {
   @Column({ length: 500 })
   subTitle: string;
 
-  @Column('text')
+  @Column()
+  slug: string;
+
+  @Column({ nullable: true })
   imageUrl: string;
 
   @Column('text')
   content: string;
 
-  @ManyToOne((type) => UserEntity, (user) => user.posts, {
-    eager: true,
-    cascade: false,
-    nullable: true,
-  })
+  @ManyToOne((type) => UserEntity, (user) => user.posts)
   @JoinColumn()
   author: UserEntity;
 }

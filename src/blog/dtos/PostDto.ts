@@ -5,6 +5,7 @@ export class PostDto {
   title?: string;
   subTitle?: string;
   imageUrl?: string;
+  slug?: string;
   content?: string;
   author?: UserDto;
 }

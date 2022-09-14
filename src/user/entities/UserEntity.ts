@@ -32,7 +32,7 @@ export class UserEntity {
   @Column({ nullable: true })
   profileImage: string;
 
-  @OneToMany((type) => PostEntity, (post) => post.author)
+  @OneToMany((type) => PostEntity, (postEntity) => postEntity.author)
   posts: PostEntity[];
 
   @BeforeInsert()

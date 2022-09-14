@@ -3,6 +3,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { UsersService } from '../../user/services/UsersService';
 import { PostService } from '../services/PostService';
 import { PostDto } from '../dtos/PostDto';
+import { UserDto } from '../../user/dtos/UserDto';
 
 @Injectable()
 export class UserIsAuthorGuard implements CanActivate {
@@ -11,23 +12,22 @@ export class UserIsAuthorGuard implements CanActivate {
     private postService: PostService,
   ) {}
 
-  async canActivate(context: ExecutionContext) {
+  async canActivate(context: ExecutionContext): Promise<any> {
     const request = context.switchToHttp().getRequest();
     const params = request.params;
 
-    if (request?.user) {
-      const { id } = request.user;
-      const postId = Number(params.id);
-      const user = await this.usersService.findById(id);
-      return this.postService.findOne(postId).then((post: PostDto) => {
+    const postId = Number(params.id);
+    const user: UserDto = request.user;
+
+    return this.usersService.findById(user.id).then((user: UserDto) => {
+      this.postService.findOne(postId).then((post: PostDto) => {
         let hasPermission = false;
 
-        if (user.id === post.author.id) {
+        if (user.id === params.id) {
           hasPermission = true;
         }
-
         return user && hasPermission;
       });
-    }
+    });
   }
 }

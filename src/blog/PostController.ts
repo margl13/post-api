@@ -26,6 +26,7 @@ import path = require('path');
 import { v4 as uuidv4 } from 'uuid';
 import { Image } from './entities/imageInterface';
 import { join } from 'path';
+import { UserIsAuthorGuard } from './guards/UserIsAuthorGuard';
 
 export const storage = {
   storage: diskStorage({
@@ -40,17 +41,37 @@ export const storage = {
   }),
 };
 
+export const POSTS_URL = 'http://localhost:3000/api/posts';
+
 @Controller('posts')
 export class PostController {
   constructor(private postService: PostService) {}
 
-  @Get()
-  findPosts(@Query('userId') userId: number): Observable<PostDto[]> {
-    if (userId == null) {
-      return this.postService.findAll();
-    } else {
-      return this.postService.findByUserId(userId);
-    }
+  @Get('')
+  index(@Query('page') page = 1, @Query('limit') limit = 10) {
+    limit = limit > 100 ? 100 : limit;
+    return this.postService.paginateAll({
+      page: Number(page),
+      limit: Number(limit),
+      route: POSTS_URL,
+    });
+  }
+
+  @Get('user/:user')
+  indexByUser(
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+    @Param('user') userId: number,
+  ) {
+    limit = limit > 100 ? 100 : limit;
+    return this.postService.paginateByUserId(
+      {
+        page: Number(page),
+        limit: Number(limit),
+        route: POSTS_URL,
+      },
+      userId,
+    );
   }
 
   @Get(':id')
@@ -63,21 +84,21 @@ export class PostController {
   create(
     @Body() createPostDto: CreatePostDto,
     @Request() req,
-  ): Promise<PostDto> {
+  ): Observable<PostDto> {
     const user = req.user;
     return this.postService.create(user, createPostDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
-  edit(
+  async edit(
     @Param('id') id: number,
     @Body() editPostDto: EditPostDto,
   ): Promise<PostDto> {
     return this.postService.edit(Number(id), editPostDto);
   }
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   delete(@Param('id') postId: number) {
     return this.postService.delete(postId);

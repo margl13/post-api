@@ -78,7 +78,12 @@ export class UsersService {
   }
 
   async findById(id: number): Promise<UserDto> {
-    return await this.userRepository.findOne({ id }, { relations: ['posts'] });
+    return await this.userRepository
+      .findOne({ id }, { relations: ['posts'] })
+      .then((user: UserDto) => {
+        const { password, ...result } = user;
+        return result;
+      });
   }
 
   async create(user: UserDto): Promise<UserDto> {
@@ -95,7 +100,9 @@ export class UsersService {
     delete user.email;
     delete user.password;
     delete user.role;
-    return await this.userRepository.update(id, user);
+    return await this.userRepository
+      .update(id, user)
+      .then(() => this.findById(id));
   }
 
   async updateRoleOfUser(id: number, user: UserDto): Promise<any> {

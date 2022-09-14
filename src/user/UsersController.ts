@@ -82,10 +82,10 @@ export class UsersController {
     return this.usersService.findById(params.id);
   }
 
-  @UseGuards(JwtAuthGuard, UserIsUser)
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
-  update(@Param('id') id: number, @Body() user: UserDto): Promise<UserDto> {
-    return this.usersService.update(id, user);
+  update(@Param('id') id: string, @Body() user: UserDto): Promise<UserDto> {
+    return this.usersService.update(Number(id), user);
   }
 
   @hasRoles(UserRole.ADMIN)
